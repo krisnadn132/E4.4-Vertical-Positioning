@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Krisna Exam System - Vertical Positioning Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+:root {
+  --bg: #f0f2f5;
+  --card: #ffffff;
+  --text: #2d3436;
+  --muted: #636e72;
+  --teal: #008080;
+  --teal-light: #e0f2f2;
+  --correct: #27ae60;
+  --wrong: #d63031;
+  --border: #dfe6e9;
+  --admin-color: #6c5ce7;
+}
+
+* { box-sizing: border-box; font-family: 'Segoe UI', Roboto, sans-serif; }
+body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+header { background: var(--card); border-bottom: 3px solid var(--teal); box-shadow: 0 2px 5px rgba(0,0,0,0.05); padding: 10px 20px; position: sticky; top: 0; z-index: 1000; }
+.header-inner { max-width: 1200px; margin: auto; display: flex; justify-content: space-between; align-items: center; }
+h1 { margin: 0; color: var(--teal); font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px; }
+
+.container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+.card { background: var(--card); border-radius: 8px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+
+/* GRID SYSTEM */
+.exam-grid { display: grid; grid-template-columns: 260px 1fr 260px; gap: 20px; align-items: start; }
+.sidebar-left, .sidebar-right { position: sticky; top: 80px; background: var(--card); padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
+.sidebar-left { border-left: 4px solid var(--teal); }
+.sidebar-right { border-right: 4px solid var(--teal); }
+
+.timer-box { font-size: 1.8rem; font-weight: bold; text-align: center; margin: 15px 0; padding: 10px; background: var(--bg); border-radius: 5px; border: 1px solid var(--border); }
+
+.nav-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+.nav-btn { padding: 8px 0; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; text-align: center; cursor: pointer; font-size: 0.8rem; }
+.nav-btn.answered { background: var(--teal); color: white; border-color: var(--teal); }
+
+.option { display: block; border: 1px solid var(--border); padding: 12px 15px; border-radius: 6px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; position: relative; }
+.option.selected { border-color: var(--teal); background: var(--teal-light); font-weight: 600; }
+.correct-view { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+.wrong-view { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+
+button { background: var(--teal); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; }
+button.secondary { background: var(--muted); }
+button.danger { background: var(--wrong); }
+button.admin-btn { background: var(--admin-color); width: auto; font-size: 0.8rem; padding: 5px 10px; margin-left: 5px; }
+
+.hidden { display: none !important; }
+.badge-essay { background: #e67e22; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; }
+
+@media (max-width: 900px) {
+    .exam-grid { display: block; }
+    .sidebar-left, .sidebar-right { position: relative; top: 0; width: 100%; margin-bottom: 20px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div style="display:flex; align-items:center; gap:10px;">
+        <i class="fas fa-arrows-alt-v" style="color:var(--teal); font-size:1.5rem;"></i>
+        <h1>Krisna Exam System <small style="font-size:0.6rem; opacity:0.7;">E4.4 Vertical Positioning</small></h1>
+    </div>
+    <div id="userDisplay" style="font-weight:bold; color:var(--muted);"></div>
+  </div>
+</header>
+
+<div class="container">
+  <div id="startScreen" class="card" style="max-width:500px; margin: 40px auto; text-align:center;">
+    <h2 style="color:var(--teal)">Candidate Login</h2>
+    <input type="text" id="candidateName" placeholder="Full Name" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ccc; border-radius:5px;">
+    <button onclick="login()">Enter System <i class="fas fa-sign-in-alt"></i></button>
+  </div>
+
+  <div id="menuScreen" class="hidden">
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0;">Module Selection</h3>
+            <button class="secondary" style="width:auto;" onclick="location.reload()">Logout</button>
+        </div>
+        
+        <div id="adminInstruction" class="hidden" style="background:#eef; color:var(--admin-color); padding:10px; border-radius:5px; margin-bottom:15px; font-size:0.9rem;">
+            <i class="fas fa-user-shield"></i> <strong>Admin Mode:</strong> Click the module below to view the <strong>Master Answer Key</strong>.
+        </div>
+
+        <button id="mainModuleBtn" onclick="handleModuleClick()" style="background:#fff3cd; color:#e67e22; border:2px solid #e67e22; padding:25px; font-size:1.1rem; text-align:left;">
+            <i class="fas fa-level-up-alt"></i> E4.4 Vertical Positioning
+        </button>
+    </div>
+    
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h3 style="margin:0;">Session History</h3>
+            <div id="adminTools" class="hidden">
+                <button class="admin-btn" onclick="exportCSV()"><i class="fas fa-file-csv"></i> Export</button>
+                <button class="admin-btn danger" onclick="clearAllData()"><i class="fas fa-trash"></i> Wipe</button>
+            </div>
+        </div>
+        <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                <thead><tr style="background:#f8f9fa;">
+                    <th style="padding:10px; border-bottom:1px solid #ddd; text-align:left;">Name</th>
+                    <th style="padding:10px; border-bottom:1px solid #ddd; text-align:left;">Score</th>
+                    <th style="padding:10px; border-bottom:1px solid #ddd; text-align:left;">Date</th>
+                    <th id="adminCol" class="hidden" style="padding:10px; border-bottom:1px solid #ddd; text-align:center;">Action</th>
+                </tr></thead>
+                <tbody id="histBody"></tbody>
+            </table>
+        </div>
+    </div>
+  </div>
+
+  <div id="examScreen" class="exam-grid hidden">
+    <aside class="sidebar-left">
+        <h3 id="displayModule">E4.4 Vertical Positioning</h3>
+        <p id="displayUser" style="font-size:0.8rem; color:var(--muted);"></p>
+        <hr>
+        <span style="font-size:0.75rem; text-transform:uppercase; color:var(--muted);">Time Elapsed</span>
+        <div class="timer-box" id="timerDisplay">00:00</div>
+        <button onclick="exitExam()" class="secondary">Exit</button>
+    </aside>
+
+    <section id="qBox"></section>
+
+    <aside class="sidebar-right">
+        <h4>Question Map</h4>
+        <div id="navGrid" class="nav-grid"></div>
+        <button onclick="submitExam()" style="padding:15px;">SUBMIT EXAM <i class="fas fa-paper-plane"></i></button>
+    </aside>
+  </div>
+
+  <div id="resultScreen" class="hidden card">
+    <div style="text-align:center; padding:20px;">
+        <h2 id="resTitle">Review</h2>
+        <div id="resScore" style="font-size:4rem; color:var(--teal); font-weight:800;">0%</div>
+        <p id="resInfo" style="color:var(--muted);"></p>
+        <button onclick="location.reload()" style="width:auto; padding:10px 30px;">Return to Menu</button>
+    </div>
+    <div id="reviewBox"></div>
+  </div>
+</div>
+
+<script>
+// DATABASE (15 MCQ + 10 Essay) - REVISED E4.4 Vertical Positioning
+const BANK = [
+    // MCQs
+    { q: "A height system is defined as", o: ["A three-dimensional coordinate system for mapping", "A one-dimensional coordinate system expressing metric distance above a reference surface", "A gravity model of the Earth", "A satellite positioning method"], a: 1 },
+    { q: "The most important reference surface for physical height systems is", o: ["The ellipsoid", "The terrain surface", "The geoid", "The quasigeoid"], a: 2 },
+    { q: "The true physical shape of the Earth, defined as an equipotential surface of gravity, is called", o: ["Ellipsoid", "Geoid", "Sphere", "Datum"], a: 1 },
+    { q: "The geopotential number is defined as", o: ["C_p = h - N", "C_p = W_p - W_0", "C_p = W_0 - W_p = ∫ g dh", "C_p = γ - g"], a: 2 },
+    { q: "Dynamic height is computed by dividing the geopotential number by", o: ["Mean gravity along plumb line", "Normal gravity at 45° latitude", "Ellipsoidal normal gravity", "Local gravity measurement"], a: 1 },
+    { q: "Orthometric height is measured", o: ["Along ellipsoidal normal from ellipsoid", "Along plumb line from the geoid", "From quasigeoid along ellipsoidal normal", "From satellite to surface"], a: 1 },
+    { q: "Normal height refers to the", o: ["Distance along plumb line to the geoid", "Height above ellipsoid", "Height above quasigeoid using normal gravity", "Height difference without gravity"], a: 2 },
+    { q: "Geodetic height (h) is measured", o: ["Along plumb line from geoid", "Along ellipsoidal normal from ellipsoid", "From quasigeoid", "Using leveling instrument"], a: 1 },
+    { q: "The classical transformation between ellipsoidal height and orthometric height is", o: ["H = N - h", "H = h - N", "H = h + N", "H = C / g"], a: 1 },
+    { q: "In practical realization of a height system, Mean Sea Level is determined using", o: ["GNSS only", "Gravity observation", "Tide gauge measurement", "Total station"], a: 2 },
+    { q: "The principle of differential leveling is based on obtaining a", o: ["Vertical line of sight", "Horizontal line of sight", "Curved line of sight", "Ellipsoidal normal"], a: 1 },
+    { q: "Which of the following is classified as a systematic error in leveling?", o: ["Reading error", "Recording error", "Earth curvature error", "Computation mistake"], a: 2 },
+    { q: "Collimation error occurs when", o: ["Staff is tilted", "Bubble is centered", "Line of sight is not horizontal", "Gravity changes"], a: 2 },
+    { q: "In trigonometric leveling using total station, the height difference depends on", o: ["Horizontal distance only", "Zenith angle and horizontal distance", "Gravity measurement", "Geoid undulation only"], a: 1 },
+    { q: "GNSS leveling becomes efficient especially when the distance is greater than", o: ["100 meters", "1 km", "5 km", "10 km"], a: 3 },
+    
+    // ESSAYS
+    { q: "Explain the difference between the ellipsoid and the geoid.", type: "essay", e: "The ellipsoid is a mathematical model of the Earth. It is smooth and regular, and it is used for GNSS positioning. The geoid is a physical surface defined by the gravity field of the Earth. It follows Mean Sea Level and is irregular. The ellipsoid is geometric, while the geoid has physical meaning." },
+    { q: "Why is the geopotential number important in height systems?", type: "essay", e: "The geopotential number represents the difference of gravity potential between a point and the geoid. It connects all physical height systems. If two points have the same geopotential number, water will not flow between them. That is why it is important for engineering and hydrology." },
+    { q: "Describe orthometric height.", type: "essay", e: "Orthometric height is the height measured from the geoid to a point on the Earth's surface along the plumb line. It uses mean gravity along that line. This height is commonly called height above Mean Sea Level." },
+    { q: "What is normal height and why is it used?", type: "essay", e: "Normal height is calculated using normal gravity instead of real gravity. It refers to the quasigeoid surface. It is used because it does not require knowledge of gravity inside the Earth, so it is simpler to compute in practice." },
+    { q: "Explain the relation H = h − N.", type: "essay", e: "H is orthometric height, h is ellipsoidal height from GNSS, and N is geoid undulation. If we subtract the geoid height from ellipsoidal height, we get the physical height above Mean Sea Level. This formula is very important in GNSS leveling." },
+    { q: "What are the main errors in differential leveling?", type: "essay", e: "Main errors include: Blunders (reading/recording mistakes), Systematic errors (curvature, refraction, and collimation), and Random errors (misclosure and double stand error)." },
+    { q: "Why must leveling loops be closed?", type: "essay", e: "Closing the loop allows us to check misclosure. If the final height does not match the starting benchmark, we know there is an error. It is a quality control method in leveling." },
+    { q: "Explain trigonometric leveling in simple terms.", type: "essay", e: "Trigonometric leveling uses a total station to measure vertical angles and distances. From these measurements, the height difference between two points can be calculated. It is useful when direct leveling is difficult." },
+    { q: "What are the advantages of GNSS leveling?", type: "essay", e: "GNSS leveling is faster for long distances (> 10 km), reduces time compared to classical leveling, and is useful in hard-to-reach areas like islands or mountains." },
+    { q: "What must be considered when using GNSS leveling?", type: "essay", e: "GNSS and geoid model must use the same reference system. Use at least two reliable benchmarks for control. The area should not have strong vertical deformation, and the geoid model accuracy must be stable in the project area." }
+];
+
+let currentUser = "";
+let userAns = {};
+let isAdmin = false;
+let timerInterval;
+let startTime;
+
+function login() {
+    let inp = document.getElementById('candidateName').value.trim();
+    if(!inp) return alert("Please enter name.");
+    currentUser = inp;
+    isAdmin = (currentUser.toLowerCase() === 'krisna');
+    
+    document.getElementById('startScreen').classList.add('hidden');
+    document.getElementById('menuScreen').classList.remove('hidden');
+    document.getElementById('userDisplay').innerHTML = isAdmin ? `<i class="fas fa-user-shield"></i> Krisna (Admin)` : currentUser;
+    
+    if(isAdmin) {
+        document.getElementById('adminInstruction').classList.remove('hidden');
+        document.getElementById('adminTools').classList.remove('hidden');
+        document.getElementById('adminCol').classList.remove('hidden');
+    }
+    refreshHistory();
+}
+
+function handleModuleClick() {
+    if(isAdmin) showMasterKey();
+    else startExam();
+}
+
+function startExam() {
+    userAns = {};
+    document.getElementById('menuScreen').classList.add('hidden');
+    document.getElementById('examScreen').classList.remove('hidden');
+    document.getElementById('displayUser').innerText = "Candidate: " + currentUser;
+    renderQuestions();
+    renderNav();
+    startTime = Date.now();
+    timerInterval = setInterval(() => {
+        let diff = Math.floor((Date.now() - startTime) / 1000);
+        let m = Math.floor(diff/60).toString().padStart(2,'0');
+        let s = (diff%60).toString().padStart(2,'0');
+        document.getElementById('timerDisplay').innerText = `${m}:${s}`;
+    }, 1000);
+}
+
+function renderQuestions() {
+    const box = document.getElementById('qBox');
+    box.innerHTML = BANK.map((q, i) => {
+        let input = '';
+        if(q.type === 'essay') {
+            input = `<textarea oninput="saveAns(${i}, this.value)" style="width:100%; height:120px; padding:10px; border-radius:5px; border:1px solid #ddd;">${userAns[i] || ''}</textarea>`;
+        } else {
+            const labels = ['A', 'B', 'C', 'D'];
+            input = q.o.map((text, oi) => `
+                <div class="option ${userAns[i] === oi ? 'selected' : ''}" onclick="saveAns(${i}, ${oi})">
+                    <strong>${labels[oi]}.</strong> ${text}
+                </div>
+            `).join('');
+        }
+        return `<div class="card" id="q_${i}">
+            <p><strong>Question ${i+1}</strong> ${q.type==='essay' ? '<span class="badge-essay">ESSAY</span>' : ''}</p>
+            <p>${q.q}</p>${input}</div>`;
+    }).join('');
+}
+
+function saveAns(idx, val) {
+    userAns[idx] = val;
+    renderNav();
+    if(BANK[idx].type !== 'essay') renderQuestions();
+}
+
+function renderNav() {
+    document.getElementById('navGrid').innerHTML = BANK.map((_, i) => `
+        <div class="nav-btn ${userAns.hasOwnProperty(i) && userAns[i] !== "" ? 'answered' : ''}" 
+             onclick="document.getElementById('q_${i}').scrollIntoView({behavior:'smooth', block:'center'})">${i+1}</div>
+    `).join('');
+}
+
+function submitExam() {
+    clearInterval(timerInterval);
+    let score = 0;
+    BANK.forEach((q, i) => {
+        if(q.type === 'essay') { if(userAns[i] && userAns[i].length > 10) score++; }
+        else { if(userAns[i] === q.a) score++; }
+    });
+    const pct = Math.round(score/BANK.length*100);
+    saveRecord(pct);
+    showResult(pct, `Score: ${score}/${BANK.length}`);
+}
+
+function showResult(pct, info) {
+    document.getElementById('examScreen').classList.add('hidden');
+    document.getElementById('resultScreen').classList.remove('hidden');
+    document.getElementById('resScore').innerText = (pct === "ADMIN" ? "KEY" : pct + "%");
+    document.getElementById('resInfo').innerText = info;
+    
+    const labels = ['A', 'B', 'C', 'D'];
+    document.getElementById('reviewBox').innerHTML = BANK.map((q, i) => {
+        let body = '';
+        if(q.type === 'essay') {
+            body = `<div style="background:#fff3e0; padding:10px; margin-bottom:5px;"><strong>Your Answer:</strong> ${userAns[i] || '-'}</div>
+                    <div style="background:#e8f5e9; padding:10px;"><strong>Key:</strong> ${q.e}</div>`;
+        } else {
+            body = q.o.map((text, oi) => {
+                let cls = (oi === q.a) ? 'correct-view' : (userAns[i] === oi ? 'wrong-view' : '');
+                return `<div class="option ${cls}"><strong>${labels[oi]}.</strong> ${text} ${oi === q.a ? '✓' : ''}</div>`;
+            }).join('');
+        }
+        return `<div class="card"><p><strong>${i+1}. ${q.q}</strong></p>${body}</div>`;
+    }).join('');
+}
+
+function showMasterKey() {
+    userAns = {};
+    showResult("ADMIN", "Viewing Official Answers for E4.4");
+    document.getElementById('resTitle').innerText = "Master Answer Key";
+}
+
+// DATA MGMT
+function saveRecord(s) {
+    let data = JSON.parse(localStorage.getItem('krisna_vert_db') || '[]');
+    data.push({n: currentUser, s: s, d: new Date().toLocaleString()});
+    localStorage.setItem('krisna_vert_db', JSON.stringify(data));
+}
+
+function refreshHistory() {
+    let data = JSON.parse(localStorage.getItem('krisna_vert_db') || '[]');
+    document.getElementById('histBody').innerHTML = data.map((h, i) => ({...h, idx: i})).reverse().map(h => `
+        <tr>
+            <td style="padding:10px; border-bottom:1px solid #eee;">${h.n}</td>
+            <td style="padding:10px; border-bottom:1px solid #eee;"><strong>${h.s}%</strong></td>
+            <td style="padding:10px; border-bottom:1px solid #eee;"><small>${h.d}</small></td>
+            <td class="${isAdmin?'':'hidden'}" style="text-align:center; border-bottom:1px solid #eee;">
+                <button onclick="deleteSingle(${h.idx})" style="background:none; color:red; width:auto; padding:0;"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join('') || '<tr><td colspan="4" style="text-align:center; padding:20px; color:#999;">No records found.</td></tr>';
+}
+
+function deleteSingle(i) {
+    if(!confirm("Delete this record?")) return;
+    let data = JSON.parse(localStorage.getItem('krisna_vert_db') || '[]');
+    data.splice(i, 1);
+    localStorage.setItem('krisna_vert_db', JSON.stringify(data));
+    refreshHistory();
+}
+
+function clearAllData() {
+    if(!confirm("WIPE ALL DATA? This cannot be undone.")) return;
+    localStorage.removeItem('krisna_vert_db');
+    refreshHistory();
+}
+
+function exportCSV() {
+    let data = JSON.parse(localStorage.getItem('krisna_vert_db') || '[]');
+    let csv = "Name,Score,Date\n" + data.map(h => `${h.n},${h.s},${h.d}`).join('\n');
+    let a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+    a.download = 'VerticalPositioning_Results.csv';
+    a.click();
+}
+
+function exitExam() {
+    if(confirm("Quit exam? Progress will be lost.")) location.reload();
+}
+</script>
+</body>
+</html>
